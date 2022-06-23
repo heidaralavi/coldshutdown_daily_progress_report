@@ -31,6 +31,19 @@ def make_master_df(df):
     df=df.reset_index(drop=True)
     df= setup_df(df)
     return df
+
+
+def make_master_progress(df):
+    w_orders= pd.read_excel('w_orders.xlsx')
+    mylist = w_orders['w_orders'].tolist()
+    #mylist = list_to_str(mylist)
+    df = df[df['WRNO'].isin(mylist)]
+    df=df.reset_index(drop=True)
+    return df
+
+
+
+
     
 
 def add_daily_chart(df):
@@ -74,10 +87,11 @@ df = make_master_df(df)
 df = add_daily_chart(df)
 plt_data=make_plotdata(df)
 plot_df(plt_data)
+prog = pd.read_excel('daily-progress.xlsx')
+prog = make_master_progress(prog)
 
-
-#print(df)
-df.to_excel('out.xlsx')
+print(prog.head())
+prog.to_excel('out.xlsx')
 
 
 
