@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def convert_to_date(df,col_name):
     df[col_name] = pd.to_datetime(df[col_name],)
-    df[col_name]=df[col_name].dt.date
+    #df[col_name]=df[col_name].dt.date
     return df
     
 def list_to_str(l):
@@ -15,7 +15,12 @@ def list_to_str(l):
 
 def setup_df(df):
     df['%man_hours']=round(df['MAN__HOUR']/df.MAN__HOUR.sum()*100,3)
-    df['duration']=df['Finish_Date']-df['Start_Date']+timedelta(days=1)
+    df['duration']=(df['Finish_Date']-df['Start_Date'])
+    
+    df.loc[df['duration'].dt.days == 0, ['duration']] = timedelta(days=1)
+    df['Start_Date']=df['Start_Date'].dt.strftime('%Y-%m-%d')
+    df['Start_Date']=pd.to_datetime(df['Start_Date'],)
+    df['Finish_Date']=df['Start_Date']+df['duration']-timedelta(days=1)
     df['day_weigth']=df['%man_hours']/(df['duration'].dt.days)
     return df
 
@@ -39,7 +44,7 @@ def make_master_progress(df):
     #mylist = list_to_str(mylist)
     df = df[df['WRNO'].isin(mylist)]
     df=df.reset_index(drop=True)
-    df['%man_hours']=round(df['MAN- HOUR']/df['MAN- HOUR'].sum()*100,3)
+    df['%man_hours']=round((df['MAN- HOUR']/(df['MAN- HOUR'].sum()))*100,3)
     return df
 
 
@@ -76,17 +81,21 @@ def plot_df(plt_data,plt2):
     ax.plot(plt_data['cumsum'],label='Plan')
     ax.plot(plt2.values(),label='Actual')
     ax.set_xticks(range(0,32,1))
+    ax.set_yticks(range(0,105,5))
     plt.xticks(rotation=90)
     plt.legend()
+    plt.title('Cold Shutdown 1401',fontsize=30)
     plt.tight_layout()
+    plt.grid()
     plt.savefig('foo.png')
     plt.show()
     
 
 def make_prog_plotdata(df):
     plt_data = {}
-    dates=['2022-06-22','2022-06-23','2022-06-24','2022-06-25',
-           '2022-06-26','2022-06-27']
+    dates = pd.date_range('2022-06-22','2022-07-22',freq='d').strftime('%Y-%m-%d')
+
+
     for col_names in df.columns:
         if col_names in dates:
             plt_data[col_names]=((df[col_names]*df['%man_hours']).sum())/100
@@ -98,15 +107,22 @@ def make_prog_plotdata(df):
 
 
 df= pd.read_excel('data.xlsx')
+
 df = make_master_df(df)
 df = add_daily_chart(df)
+
+df.to_excel('out.xlsx')
+
 plt_data=make_plotdata(df)
 
 prog = pd.read_excel('daily-progress.xlsx')
 prog = make_master_progress(prog)
+
 plt2 = make_prog_plotdata(prog)
 
 plot_df(plt_data,plt2)
+
+
 #print(prog.head())
 #prog.to_excel('out.xlsx')
 
