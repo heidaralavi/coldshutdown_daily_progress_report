@@ -39,6 +39,7 @@ def make_master_progress(df):
     #mylist = list_to_str(mylist)
     df = df[df['WRNO'].isin(mylist)]
     df=df.reset_index(drop=True)
+    df['%man_hours']=round(df['MAN- HOUR']/df['MAN- HOUR'].sum()*100,3)
     return df
 
 
@@ -70,28 +71,44 @@ def make_plotdata(df):
     return plt_df
 
 
-def plot_df(plt_data):
+def plot_df(plt_data,plt2):
     fix, ax = plt.subplots(figsize=(10,10),dpi=300)
-    ax.plot(plt_data['cumsum'])
+    ax.plot(plt_data['cumsum'],label='Plan')
+    ax.plot(plt2.values(),label='Actual')
     ax.set_xticks(range(0,32,1))
     plt.xticks(rotation=90)
-    
+    plt.legend()
     plt.tight_layout()
     plt.savefig('foo.png')
     plt.show()
     
+
+def make_prog_plotdata(df):
+    plt_data = {}
+    dates=['2022-06-22','2022-06-23','2022-06-24','2022-06-25',
+           '2022-06-26','2022-06-27']
+    for col_names in df.columns:
+        if col_names in dates:
+            plt_data[col_names]=((df[col_names]*df['%man_hours']).sum())/100
+        
+    return plt_data
+
+
+
 
 
 df= pd.read_excel('data.xlsx')
 df = make_master_df(df)
 df = add_daily_chart(df)
 plt_data=make_plotdata(df)
-plot_df(plt_data)
+
 prog = pd.read_excel('daily-progress.xlsx')
 prog = make_master_progress(prog)
+plt2 = make_prog_plotdata(prog)
 
-print(prog.head())
-prog.to_excel('out.xlsx')
+plot_df(plt_data,plt2)
+#print(prog.head())
+#prog.to_excel('out.xlsx')
 
 
 
