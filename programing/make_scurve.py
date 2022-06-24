@@ -24,33 +24,16 @@ def setup_df(df):
     df['day_weigth']=df['%man_hours']/(df['duration'].dt.days)
     return df
 
-
-
 def make_master_df(df):
-    w_orders= pd.read_excel('w_orders.xlsx')
-    mylist = w_orders['w_orders'].tolist()
-    mylist = list_to_str(mylist)
     df = convert_to_date(df, 'Start_Date')
     df = convert_to_date(df, 'Finish_Date')
-    df = df[df['WRNO'].isin(mylist)]
     df=df.reset_index(drop=True)
     df= setup_df(df)
     return df
 
-
 def make_master_progress(df):
-    w_orders= pd.read_excel('w_orders.xlsx')
-    mylist = w_orders['w_orders'].tolist()
-    #mylist = list_to_str(mylist)
-    df = df[df['WRNO'].isin(mylist)]
-    df=df.reset_index(drop=True)
     df['%man_hours']=round((df['MAN- HOUR']/(df['MAN- HOUR'].sum()))*100,3)
     return df
-
-
-
-
-    
 
 def add_daily_chart(df):
     lists=pd.date_range(df.Start_Date.min(),df.Finish_Date.max(),freq='d').strftime('%Y-%m-%d')
@@ -95,7 +78,6 @@ def make_prog_plotdata(df):
     plt_data = {}
     dates = pd.date_range('2022-06-22','2022-07-22',freq='d').strftime('%Y-%m-%d')
 
-
     for col_names in df.columns:
         if col_names in dates:
             plt_data[col_names]=((df[col_names]*df['%man_hours']).sum())/100
@@ -103,28 +85,49 @@ def make_prog_plotdata(df):
     return plt_data
 
 
+def filter_by_w_order(df,col):
+    dic=[]
+    w_orders= pd.read_excel('w_orders.xlsx')
+    mylist = w_orders['w_orders'].tolist()
+    mylist = list_to_str(mylist)
+    for item in df[col].to_list():
+        cc='no'
+        for l in mylist:
+            if (l in str(item)):
+                cc='yes'
+        if cc == 'yes':
+            dic.append(True)
+        if cc == 'no':
+            dic.append(False)
+    return df[dic]
 
 
 
 df= pd.read_excel('data.xlsx')
-
+df=filter_by_w_order(df,'WRNO')
 df = make_master_df(df)
 df = add_daily_chart(df)
-
 df.to_excel('out.xlsx')
+
 
 plt_data=make_plotdata(df)
 
+
 prog = pd.read_excel('daily-progress.xlsx')
+prog=filter_by_w_order(prog,'W.R.NO')
+
+
 prog = make_master_progress(prog)
 
+#prog.to_excel('out.xlsx')
+
+
 plt2 = make_prog_plotdata(prog)
+#print(plt2)
 
 plot_df(plt_data,plt2)
 
 
-#print(prog.head())
-#prog.to_excel('out.xlsx')
 
 
 
