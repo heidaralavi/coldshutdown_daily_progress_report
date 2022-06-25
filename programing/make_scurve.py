@@ -42,8 +42,6 @@ def make_master_progress():
         df['%man_hours']=round((df['MAN- HOUR']/(df['MAN- HOUR'].sum()))*100,3)
         plt_data[sheet]=((df['ACTUAL%']*df['%man_hours']).sum())/100
     
-    
-    
     return plt_data
 
 def add_daily_chart(df):
@@ -81,7 +79,7 @@ def plot_df(plt_data,plt2):
     plt.title('Cold Shutdown 1401',fontsize=30)
     plt.tight_layout()
     plt.grid()
-    plt.savefig('foo.png')
+    plt.savefig('S_Curve.png')
     plt.show()
     
 
@@ -118,19 +116,14 @@ df= pd.read_excel('data.xlsx')
 df=filter_by_w_order(df,'WRNO')
 df = make_master_df(df)
 df = add_daily_chart(df)
-df.to_excel('out.xlsx')
 
 
 plt_data=make_plotdata(df)
 
 
-
-
-
 plt2 = make_master_progress()
 
 #prog.to_excel('out.xlsx')
-
 
 
 plot_df(plt_data,plt2)
