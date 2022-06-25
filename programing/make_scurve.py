@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
+import numpy as np
 
 def convert_to_date(df,col_name):
     df[col_name] = pd.to_datetime(df[col_name],)
@@ -31,9 +32,19 @@ def make_master_df(df):
     df= setup_df(df)
     return df
 
-def make_master_progress(df):
-    df['%man_hours']=round((df['MAN- HOUR']/(df['MAN- HOUR'].sum()))*100,3)
-    return df
+def make_master_progress():
+    xl = pd.ExcelFile('daily-progress.xlsx')
+    sheets=np.array(xl.sheet_names).reshape(-1)
+    plt_data = {}
+    for sheet in sheets:
+        df=pd.read_excel('daily-progress.xlsx',sheet_name=sheet)
+        df=filter_by_w_order(df,'W.R.NO')
+        df['%man_hours']=round((df['MAN- HOUR']/(df['MAN- HOUR'].sum()))*100,3)
+        plt_data[sheet]=((df['ACTUAL%']*df['%man_hours']).sum())/100
+    
+    
+    
+    return plt_data
 
 def add_daily_chart(df):
     lists=pd.date_range(df.Start_Date.min(),df.Finish_Date.max(),freq='d').strftime('%Y-%m-%d')
@@ -113,17 +124,14 @@ df.to_excel('out.xlsx')
 plt_data=make_plotdata(df)
 
 
-prog = pd.read_excel('daily-progress.xlsx')
-prog=filter_by_w_order(prog,'W.R.NO')
 
 
-prog = make_master_progress(prog)
+
+plt2 = make_master_progress()
 
 #prog.to_excel('out.xlsx')
 
 
-plt2 = make_prog_plotdata(prog)
-#print(plt2)
 
 plot_df(plt_data,plt2)
 
